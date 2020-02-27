@@ -1,4 +1,4 @@
-# Retryable Futures
+# Restartable Futures
 
 [![Restartables crates.io badge](https://img.shields.io/crates/v/restartables.svg)](https://crates.io/crates/restartables)
 [![Restartables docs.rs badge](https://docs.rs/restartables/badge.svg)](https://docs.rs/restartables)
