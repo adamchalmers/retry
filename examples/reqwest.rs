@@ -21,6 +21,7 @@ async fn example(url_to_hit: &'static str) {
     let req = reqwest::Request::new(Method::GET, url);
     let client: reqwest::Client = Default::default();
     let timeout = Duration::from_secs(2);
+    // The `reqw` module is only included if the `use_reqwest` feature is enabled.
     let retrying = restartables::reqw::execute(
         &client,
         &req,
@@ -29,7 +30,7 @@ async fn example(url_to_hit: &'static str) {
             Ok(resp) => Err(MyError::BadStatus(resp.status())),
             Err(e) => Err(MyError::Reqwest(e)),
         },
-        timeout,
+        Some(timeout),
     );
     println!("Pinging {}", url_to_hit);
     let outcome = retrying.await;

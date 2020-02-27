@@ -4,7 +4,7 @@ pub async fn execute<T, E, Test>(
     client: &reqwest::Client,
     req: &reqwest::Request,
     test: Test,
-    timeout: Duration,
+    timeout: Option<Duration>,
 ) -> Result<Success<T>, Failure<E>>
 where
     Test: Fn(Result<reqwest::Response, reqwest::Error>) -> Result<T, E>,
