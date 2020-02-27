@@ -3,23 +3,25 @@ name = "restartables"
 version = "0.1.0"
 authors = ["Adam Chalmers <adam.s.chalmers@gmail.com>"]
 license = "MIT"
-repository = "github.com/adamchalmers/retry"
+repository = "https://github.com/adamchalmers/retry"
 edition = "2018"
+description = "Future that restarts an inner future if it doesn't meet a condition."
 features = ["use_reqwest"]
+keywords = ["async"]
+categories = ["asynchronous"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-futures = "0.3"
-reqwest = { version = "0.10", optional = true }
 pin-project = "0.4"
+reqwest = { version = "0.10", optional = true }
 
 [features]
 use_reqwest = ["reqwest"]
 
 [dev-dependencies]
-tokio = { version = "0.2", features = ["full"] }
 reqwest = "0.10"
+tokio = { version = "0.2", features = ["full"] }
 
 [[example]]
 name = "reqwest"
