@@ -12,17 +12,17 @@ enum MyError {
 
 #[tokio::main]
 async fn main() {
-    good_example().await;
-    bad_example().await;
+    example("https://google.com").await;
+    example("https://google.asdfasdfasdf").await;
 }
 
-async fn bad_example() {
-    let url = reqwest::Url::parse("https://google.asdfasdfasdfasdf").unwrap();
+async fn example(url_to_hit: &'static str) {
+    let url = reqwest::Url::parse(url_to_hit).unwrap();
     let req = reqwest::Request::new(Method::GET, url);
     let client: reqwest::Client = Default::default();
     let timeout = Duration::from_secs(2);
     let retrying = retry_future::reqw::execute(
-        client,
+        &client,
         req,
         |r| match r {
             Ok(resp) if resp.status().is_success() => Ok(()),
@@ -31,27 +31,7 @@ async fn bad_example() {
         },
         timeout,
     );
-    println!("Running bad example");
-    let outcome = retrying.await;
-    println!("{:?}", outcome);
-}
-
-async fn good_example() {
-    let url = reqwest::Url::parse("https://google.com").unwrap();
-    let req = reqwest::Request::new(Method::GET, url);
-    let client: reqwest::Client = Default::default();
-    let timeout = Duration::from_secs(2);
-    let retrying = retry_future::reqw::execute(
-        client,
-        req,
-        |r| match r {
-            Ok(resp) if resp.status().is_success() => Ok(()),
-            Ok(resp) => Err(MyError::BadStatus(resp.status())),
-            Err(e) => Err(MyError::Reqwest(e)),
-        },
-        timeout,
-    );
-    println!("Running good example");
+    println!("Pinging {}", url_to_hit);
     let outcome = retrying.await;
     println!("{:?}", outcome);
 }

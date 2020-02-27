@@ -14,10 +14,10 @@ use std::time::{Duration, Instant};
 /// If the test is unsuccessful, the future is recreated and retried.
 /// Because this fail-retry loop could go on forever, you have to supply a timeout.
 #[pin_project]
-pub struct Retry<Fut, Test, Factory, Client, T, E>
+pub struct Retry<Fut, Test, Factory, T, E>
 where
     Fut: Future,
-    Factory: Fn(&Client) -> Fut,
+    Factory: Fn() -> Fut,
     Test: Fn(Fut::Output) -> Result<T, E>,
 {
     #[pin]
@@ -25,29 +25,21 @@ where
     start: Option<Instant>,
     factory: Factory,
     timeout: Duration,
-    client: Client,
     test: Test,
     retries: usize,
 }
 
-impl<Fut, Test, Factory, Client, T, E> Retry<Fut, Test, Factory, Client, T, E>
+impl<Fut, Test, Factory, T, E> Retry<Fut, Test, Factory, T, E>
 where
     Fut: Future,
-    Factory: Fn(&Client) -> Fut,
+    Factory: Fn() -> Fut,
     Test: Fn(Fut::Output) -> Result<T, E>,
 {
-    pub fn new(
-        future: Fut,
-        factory: Factory,
-        timeout: Duration,
-        client: Client,
-        test: Test,
-    ) -> Self {
+    pub fn new(future: Fut, factory: Factory, timeout: Duration, test: Test) -> Self {
         Retry {
             future,
             factory,
             timeout,
-            client,
             test,
             start: None,
             retries: 0,
@@ -69,10 +61,10 @@ pub enum Outcome<T, E> {
     },
 }
 
-impl<Fut, Test, Factory, Client, T, E> Future for Retry<Fut, Test, Factory, Client, T, E>
+impl<Fut, Test, Factory, T, E> Future for Retry<Fut, Test, Factory, T, E>
 where
     Fut: Future,
-    Factory: Fn(&Client) -> Fut,
+    Factory: Fn() -> Fut,
     Test: Fn(Fut::Output) -> Result<T, E>,
 {
     type Output = Outcome<T, E>;
@@ -102,7 +94,7 @@ where
             // Failure, but there's still time for a retry
             (Poll::Ready(Err(_)), false) => {
                 cx.waker().wake_by_ref();
-                let new_future = (this.factory)(this.client);
+                let new_future = (this.factory)();
                 this.future.set(new_future);
                 *this.retries += 1;
                 Poll::Pending
