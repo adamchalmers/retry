@@ -1,3 +1,5 @@
+/// Value returned from a successful test, along with metrics.
+///
 /// If the future eventually resolves a value that passes the test, it returns it, along with some
 /// metrics. This struct combines the value returned, along with how long/how many restarts it took
 /// to get that value.

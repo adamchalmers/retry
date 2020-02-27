@@ -1,3 +1,23 @@
+//! Say, for example, that you want to keep pinging a URL until it returns 200, or five seconds pass.
+//! And if the URL _does_ return 200, you'd like to know how long that took.
+//!
+//! This library contains a Future wrapper. It wraps up a Future you want to retry, and it keeps retrying
+//! the future until it passes a Test you provide. If the inner future passes the Test, then the wrapper
+//! resolves your value. But if the inner future fails the Test, the wrapper will just restart the future.
+//! Assuming the timeout hasn't expired.
+//!
+//! To do this, you need to provide three things when instantiating the wrapper:
+//! - A future to poll
+//! - A test, i.e. a closure which takes values from the inner future, runs a test on it, and returns Result
+//! - A factory to make new futures if the previous future resolved a value that failed the test.
+//!
+//! The wrapper will also return some metrics, i.e. how much time elapsed before the future resolved, and
+//! how many restarts were necessary.
+//!
+//! If the future you're using is from [`reqwest`](docs.rs/reqwest), I've added a `reqw` module with a
+//! convenience function to simplify setting up the wrapper.
+//!
+
 mod outcome;
 #[cfg(use_reqwest)]
 pub mod reqw;
@@ -9,13 +29,17 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::time::{Duration, Instant};
 
+/// Wraps an inner future, restarting it until it resolves a value that passes a test, or times out.
+///
 /// This is a Future adaptor, meaning it wraps other futures, like `future::Map`.
 /// It adds a configurable timeout and restarts.
 /// When this future is polled, it polls the inner future. If the inner futures resolves, its value
 /// is run through a `test` closure.
+///
 /// If the test is successful, the value is returned with timing information.
 /// If the test is unsuccessful, the future is recreated and retried.
-/// Because this fail-restart loop could go on forever, you have to supply a timeout.
+/// Because this fail-restart loop could go on forever, you should supply a timeout. If a `None`
+/// timeout is used, then awaiting the `Restartable` is not guaranteed to resolve.
 #[pin_project]
 pub struct Restartable<Fut, Test, Factory, T, E>
 where
@@ -27,7 +51,7 @@ where
     future: Fut,
     start: Option<Instant>,
     factory: Factory,
-    timeout: Duration,
+    timeout: Option<Duration>,
     test: Test,
     restarts: usize,
 }
@@ -38,7 +62,7 @@ where
     Factory: Fn() -> Fut,
     Test: Fn(Fut::Output) -> Result<T, E>,
 {
-    pub fn new(future: Fut, factory: Factory, timeout: Duration, test: Test) -> Self {
+    pub fn new(future: Fut, factory: Factory, timeout: Option<Duration>, test: Test) -> Self {
         Restartable {
             future,
             factory,
@@ -67,7 +91,11 @@ where
 
         // Measure timing
         let elapsed = start.elapsed();
-        let timed_out = elapsed > *this.timeout;
+        let timed_out = if let Some(timeout) = *this.timeout {
+            elapsed > timeout
+        } else {
+            false
+        };
 
         match (inner_poll, timed_out) {
             // Inner future timed out without ever resolving
