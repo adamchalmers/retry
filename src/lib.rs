@@ -1,4 +1,5 @@
 mod outcome;
+#[cfg(use_reqwest)]
 pub mod reqw;
 
 pub use outcome::{Failure, Success};

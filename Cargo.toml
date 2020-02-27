@@ -10,11 +10,16 @@ edition = "2018"
 
 [dependencies]
 futures = "0.3"
-reqwest = "0.10"
+reqwest = { version = "0.10", optional = true }
 pin-project = "0.4"
+
+[features]
+use_reqwest = ["reqwest"]
 
 [dev-dependencies]
 tokio = { version = "0.2", features = ["full"] }
+reqwest = "0.10"
 
 [[example]]
 name = "reqwest"
+required-features = ["use_reqwest"]
