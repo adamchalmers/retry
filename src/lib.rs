@@ -37,7 +37,7 @@
 //! }
 //!
 //! fn print_random_even_number() {
-//!     // This closure will be called to get new Futures if the old Future's value failed the test
+//!     // This closure produces futures that the Restartable will poll
 //!     let factory = || RandomNum {};
 //!
 //!     // This test returns even numbers, and fails odd numbers.
@@ -50,9 +50,7 @@
 //!     };
 //!
 //!     // Wrap the inner `RandomNum` future into a `Restartable` future.
-//!     let inner_future = factory();
 //!     let retrying = Restartable::new(
-//!         inner_future,
 //!         factory,
 //!         Some(Duration::from_millis(1)),
 //!         test_is_even,
@@ -116,9 +114,9 @@ where
     Factory: Fn() -> Fut,
     Test: Fn(Fut::Output) -> Result<T, E>,
 {
-    pub fn new(future: Fut, factory: Factory, timeout: Option<Duration>, test: Test) -> Self {
+    pub fn new(factory: Factory, timeout: Option<Duration>, test: Test) -> Self {
         Restartable {
-            future,
+            future: factory(),
             factory,
             timeout,
             test,

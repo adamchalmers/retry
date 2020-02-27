@@ -17,8 +17,6 @@ impl Future for RandomNum {
 
 #[tokio::main]
 async fn main() {
-    let factory = || RandomNum {};
-    let future = factory();
     // This test returns even numbers, and fails odd numbers.
     let test_is_even = |num| {
         if num % 2 == 0 {
@@ -29,12 +27,8 @@ async fn main() {
     };
 
     // Wrap the inner `RandomNum` future into a `Restartable` future.
-    let retrying = Restartable::new(
-        future,
-        factory,
-        Some(Duration::from_millis(1)),
-        test_is_even,
-    );
+    let factory = || RandomNum {};
+    let retrying = Restartable::new(factory, Some(Duration::from_millis(1)), test_is_even);
 
     match retrying.await {
         Ok(success) => println!(
