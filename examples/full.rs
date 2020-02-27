@@ -23,7 +23,7 @@ async fn example(url_to_hit: &'static str) {
     let timeout = Duration::from_secs(2);
     let retrying = retry_future::reqw::execute(
         &client,
-        req,
+        &req,
         |r| match r {
             Ok(resp) if resp.status().is_success() => Ok(()),
             Ok(resp) => Err(MyError::BadStatus(resp.status())),

@@ -2,7 +2,7 @@ use super::{Outcome, Retry};
 use std::time::Duration;
 pub async fn execute<T, E, Test>(
     client: &reqwest::Client,
-    req: reqwest::Request,
+    req: &reqwest::Request,
     test: Test,
     timeout: Duration,
 ) -> Outcome<T, E>
