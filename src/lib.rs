@@ -1,5 +1,7 @@
+mod outcome;
 pub mod reqw;
 
+pub use outcome::{Failure, Success};
 use pin_project::pin_project;
 use std::future::Future;
 use std::pin::Pin;
@@ -7,7 +9,7 @@ use std::task::{Context, Poll};
 use std::time::{Duration, Instant};
 
 /// This is a Future adaptor, meaning it wraps other futures, like `future::Map`.
-/// It adds a configurable timeout and retries.
+/// It adds a configurable timeout and restarts.
 /// When this future is polled, it polls the inner future. If the inner futures resolves, its value
 /// is run through a `test` closure.
 /// If the test is successful, the value is returned with timing information.
@@ -26,7 +28,7 @@ where
     factory: Factory,
     timeout: Duration,
     test: Test,
-    retries: usize,
+    restarts: usize,
 }
 
 impl<Fut, Test, Factory, T, E> Retry<Fut, Test, Factory, T, E>
@@ -42,23 +44,9 @@ where
             timeout,
             test,
             start: None,
-            retries: 0,
+            restarts: 0,
         }
     }
-}
-
-#[derive(Debug)]
-pub enum Outcome<T, E> {
-    Timeout,
-    Err {
-        error: E,
-        retries: usize,
-    },
-    Ok {
-        value: T,
-        duration: Duration,
-        retries: usize,
-    },
 }
 
 impl<Fut, Test, Factory, T, E> Future for Retry<Fut, Test, Factory, T, E>
@@ -67,7 +55,7 @@ where
     Factory: Fn() -> Fut,
     Test: Fn(Fut::Output) -> Result<T, E>,
 {
-    type Output = Outcome<T, E>;
+    type Output = Result<Success<T>, Failure<E>>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
         let mut this = self.project();
@@ -82,28 +70,28 @@ where
 
         match (inner_poll, timed_out) {
             // Inner future timed out without ever resolving
-            (Poll::Pending, true) => Poll::Ready(Outcome::Timeout),
+            (Poll::Pending, true) => Poll::Ready(Err(Failure::Timeout)),
             // There's still time to retry
             (Poll::Pending, false) => Poll::Pending,
             // Success!
-            (Poll::Ready(Ok(resp)), _) => Poll::Ready(Outcome::Ok {
+            (Poll::Ready(Ok(resp)), _) => Poll::Ready(Ok(Success {
                 value: resp,
                 duration: elapsed,
-                retries: *this.retries,
-            }),
+                restarts: *this.restarts,
+            })),
             // Failure, but there's still time for a retry
             (Poll::Ready(Err(_)), false) => {
                 cx.waker().wake_by_ref();
                 let new_future = (this.factory)();
                 this.future.set(new_future);
-                *this.retries += 1;
+                *this.restarts += 1;
                 Poll::Pending
             }
             // Failure, and the timeout has expired, so return the failure.
-            (Poll::Ready(Err(e)), true) => Poll::Ready(Outcome::Err {
+            (Poll::Ready(Err(e)), true) => Poll::Ready(Err(Failure::Err {
                 error: e,
-                retries: *this.retries,
-            }),
+                restarts: *this.restarts,
+            })),
         }
     }
 }

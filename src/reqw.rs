@@ -1,11 +1,11 @@
-use super::{Outcome, Retry};
+use super::{Failure, Retry, Success};
 use std::time::Duration;
 pub async fn execute<T, E, Test>(
     client: &reqwest::Client,
     req: &reqwest::Request,
     test: Test,
     timeout: Duration,
-) -> Outcome<T, E>
+) -> Result<Success<T>, Failure<E>>
 where
     Test: Fn(Result<reqwest::Response, reqwest::Error>) -> Result<T, E>,
 {
