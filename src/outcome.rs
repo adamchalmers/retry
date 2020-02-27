@@ -1,4 +1,4 @@
-/// If the Retry eventually resolves a value that passes the test, it returns it, along with some
+/// If the future eventually resolves a value that passes the test, it returns it, along with some
 /// metrics. This struct combines the value returned, along with how long/how many restarts it took
 /// to get that value.
 #[derive(Debug)]
@@ -11,7 +11,7 @@ pub struct Success<T> {
     pub restarts: usize,
 }
 
-/// Different ways a Retry future can fail
+/// Different ways a Restartable can fail
 #[derive(Debug)]
 pub enum Failure<E> {
     /// Returned if the inner future never resolved before the timeout

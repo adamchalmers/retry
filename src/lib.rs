@@ -14,9 +14,9 @@ use std::time::{Duration, Instant};
 /// is run through a `test` closure.
 /// If the test is successful, the value is returned with timing information.
 /// If the test is unsuccessful, the future is recreated and retried.
-/// Because this fail-retry loop could go on forever, you have to supply a timeout.
+/// Because this fail-restart loop could go on forever, you have to supply a timeout.
 #[pin_project]
-pub struct Retry<Fut, Test, Factory, T, E>
+pub struct Restartable<Fut, Test, Factory, T, E>
 where
     Fut: Future,
     Factory: Fn() -> Fut,
@@ -31,14 +31,14 @@ where
     restarts: usize,
 }
 
-impl<Fut, Test, Factory, T, E> Retry<Fut, Test, Factory, T, E>
+impl<Fut, Test, Factory, T, E> Restartable<Fut, Test, Factory, T, E>
 where
     Fut: Future,
     Factory: Fn() -> Fut,
     Test: Fn(Fut::Output) -> Result<T, E>,
 {
     pub fn new(future: Fut, factory: Factory, timeout: Duration, test: Test) -> Self {
-        Retry {
+        Restartable {
             future,
             factory,
             timeout,
@@ -49,7 +49,7 @@ where
     }
 }
 
-impl<Fut, Test, Factory, T, E> Future for Retry<Fut, Test, Factory, T, E>
+impl<Fut, Test, Factory, T, E> Future for Restartable<Fut, Test, Factory, T, E>
 where
     Fut: Future,
     Factory: Fn() -> Fut,
@@ -71,7 +71,7 @@ where
         match (inner_poll, timed_out) {
             // Inner future timed out without ever resolving
             (Poll::Pending, true) => Poll::Ready(Err(Failure::Timeout)),
-            // There's still time to retry
+            // There's still time to poll again
             (Poll::Pending, false) => Poll::Pending,
             // Success!
             (Poll::Ready(Ok(resp)), _) => Poll::Ready(Ok(Success {
@@ -79,7 +79,7 @@ where
                 duration: elapsed,
                 restarts: *this.restarts,
             })),
-            // Failure, but there's still time for a retry
+            // Failure, but there's still time to restart the future and try again.
             (Poll::Ready(Err(_)), false) => {
                 cx.waker().wake_by_ref();
                 let new_future = (this.factory)();

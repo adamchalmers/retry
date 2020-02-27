@@ -1,4 +1,4 @@
-extern crate retry_future;
+extern crate restartables;
 use reqwest;
 use reqwest::Method;
 use std::default::Default;
@@ -21,7 +21,7 @@ async fn example(url_to_hit: &'static str) {
     let req = reqwest::Request::new(Method::GET, url);
     let client: reqwest::Client = Default::default();
     let timeout = Duration::from_secs(2);
-    let retrying = retry_future::reqw::execute(
+    let retrying = restartables::reqw::execute(
         &client,
         &req,
         |r| match r {
