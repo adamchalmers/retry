@@ -3,7 +3,8 @@
 use super::{Failure, Restartable, Success};
 use std::time::Duration;
 
-/// Keeps resending a request until its response passes the test, or it times out.
+/// Keeps resending a request until its response passes the test, or it times out. Panics if the
+/// Request can't be cloned.
 ///
 /// If the timeout is None, this might never resolve.
 ///

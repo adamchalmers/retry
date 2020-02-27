@@ -16,6 +16,62 @@
 //!
 //! If the future you're using is from [`reqwest`](https://docs.rs/reqwest), consider using the [`reqw`](reqw/index.html)
 //! module to simplify setup. This requires the `use_reqwest` feature.
+//!
+//! # Example
+//!
+//! ```
+//! use restartables::{Failure, Restartable};
+//! use std::future::Future;
+//! use std::pin::Pin;
+//! use std::task::{Context, Poll};
+//! use std::time::Duration;
+//!
+//! // A Future that yields a random u16 when it resolves.
+//! struct RandomNum {}
+//! impl Future for RandomNum {
+//!     type Output = u16;
+//!     fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
+//!         cx.waker().wake_by_ref();
+//!         Poll::Ready(rand::random())
+//!     }
+//! }
+//!
+//! fn print_random_even_number() {
+//!     // This closure will be called to get new Futures if the old Future's value failed the test
+//!     let factory = || RandomNum {};
+//!
+//!     // This test returns even numbers, and fails odd numbers.
+//!     let test_is_even = |num| {
+//!         if num % 2 == 0 {
+//!             Ok(num)
+//!         } else {
+//!             Err("number wasn't even")
+//!         }
+//!     };
+//!
+//!     // Wrap the inner `RandomNum` future into a `Restartable` future.
+//!     let inner_future = factory();
+//!     let retrying = Restartable::new(
+//!         inner_future,
+//!         factory,
+//!         Some(Duration::from_millis(1)),
+//!         test_is_even,
+//!     );
+//!
+//!     match retrying.await {
+//!         Ok(success) => println!(
+//!             "Final number was {}, which took {}us and {} restarts to get",
+//!             success.value,
+//!             success.duration.as_micros(),
+//!             success.restarts
+//!         ),
+//!         Err(Failure::Timeout) => println!("Never found an even number :("),
+//!         Err(Failure::Err { error, restarts }) => {
+//!             println!("Error {} after {} restarts", error, restarts)
+//!         }
+//!     };
+//! }
+//! ```
 
 mod outcome;
 #[cfg(feature = "use_reqwest")]

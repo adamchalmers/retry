@@ -6,9 +6,11 @@ license = "MIT"
 repository = "https://github.com/adamchalmers/retry"
 edition = "2018"
 description = "Future that restarts an inner future if it doesn't meet a condition."
-features = ["use_reqwest"]
 keywords = ["async"]
 categories = ["asynchronous"]
+
+[package.metadata.docs.rs]
+features = ["use_reqwest"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -20,9 +22,13 @@ reqwest = { version = "0.10", optional = true }
 use_reqwest = ["reqwest"]
 
 [dev-dependencies]
+rand = "0.7"
 reqwest = "0.10"
 tokio = { version = "0.2", features = ["full"] }
 
 [[example]]
 name = "reqwest"
 required-features = ["use_reqwest"]
+
+[[example]]
+name = "rng"
