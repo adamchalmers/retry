@@ -14,9 +14,8 @@
 //! The wrapper will also return some metrics, i.e. how much time elapsed before the future resolved, and
 //! how many restarts were necessary.
 //!
-//! If the future you're using is from [`reqwest`](docs.rs/reqwest), I've added a `reqw` module with a
-//! convenience function to simplify setting up the wrapper.
-//!
+//! If the future you're using is from [`reqwest`](https://docs.rs/reqwest), consider using the [`reqw`](reqw/index.html)
+//! module to simplify setup. This requires the `use_reqwest` feature.
 
 mod outcome;
 #[cfg(feature = "use_reqwest")]
@@ -31,8 +30,7 @@ use std::time::{Duration, Instant};
 
 /// Wraps an inner future, restarting it until it resolves a value that passes a test, or times out.
 ///
-/// This is a Future adaptor, meaning it wraps other futures, like `future::Map`.
-/// It adds a configurable timeout and restarts.
+/// This is a Future adaptor, meaning it wraps other futures, like [`future::map`](https://docs.rs/futures/0.3.4/futures/future/trait.FutureExt.html#method.map)
 /// When this future is polled, it polls the inner future. If the inner futures resolves, its value
 /// is run through a `test` closure.
 ///

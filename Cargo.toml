@@ -5,6 +5,7 @@ authors = ["Adam Chalmers <adam.s.chalmers@gmail.com>"]
 license = "MIT"
 repository = "github.com/adamchalmers/retry"
 edition = "2018"
+features = ["use_reqwest"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
