@@ -36,7 +36,7 @@
 //!     }
 //! }
 //!
-//! fn print_random_even_number() {
+//! async fn print_random_even_number() {
 //!     // This closure produces futures that the Restartable will poll
 //!     let factory = || RandomNum {};
 //!
@@ -72,8 +72,6 @@
 //! ```
 
 mod outcome;
-#[cfg(feature = "use_reqwest")]
-pub mod reqw;
 
 pub use outcome::{Failure, Success};
 use pin_project::pin_project;
