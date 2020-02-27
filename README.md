@@ -1,5 +1,8 @@
 # Retryable Futures
 
+[![Restartables crates.io badge](https://img.shields.io/crates/v/restartables.svg)](https://crates.io/crates/restartables)
+[![Restartables docs.rs badge](https://docs.rs/restartables/badge.svg)](https://docs.rs/restartables)
+
 Say, for example, that you want to keep pinging a URL until it returns 200, or five seconds pass.
 And if the URL _does_ return 200, you'd like to know how long that took.
 
