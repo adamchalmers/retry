@@ -16,10 +16,8 @@ To do this, you need to provide three things when instantiating the wrapper:
 The wrapper will also return some metrics, i.e. how much time elapsed before the future resolved, and
 how many restarts were necessary.
 
-If the future you're using is from [`reqwest`](docs.rs/reqwest), I've added a `reqw` module with a
-convenience function to simplify setting up the wrapper.
-
 To run the examples,
 ```bash
 cargo run --example reqwest
+cargo run --example rng
 ```

@@ -22,7 +22,6 @@ async fn example(url_to_hit: &'static str) {
     let req = reqwest::Request::new(Method::GET, url);
     let client: reqwest::Client = Default::default();
     let timeout = Duration::from_secs(2);
-    // The `reqw` module is only included if the `use_reqwest` feature is enabled.
 
     let factory = || client.execute(req.try_clone().unwrap());
     let retrying = Restartable::new(factory, Some(timeout), |r| match r {

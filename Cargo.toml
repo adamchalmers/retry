@@ -1,6 +1,6 @@
 [package]
 name = "restartables"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["Adam Chalmers <adam.s.chalmers@gmail.com>"]
 license = "MIT"
 repository = "https://github.com/adamchalmers/retry"

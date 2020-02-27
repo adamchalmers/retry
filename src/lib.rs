@@ -14,9 +14,6 @@
 //! The wrapper will also return some metrics, i.e. how much time elapsed before the future resolved, and
 //! how many restarts were necessary.
 //!
-//! If the future you're using is from [`reqwest`](https://docs.rs/reqwest), consider using the [`reqw`](reqw/index.html)
-//! module to simplify setup. This requires the `use_reqwest` feature.
-//!
 //! # Example
 //!
 //! ```
