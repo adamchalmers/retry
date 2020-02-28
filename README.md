@@ -6,7 +6,7 @@
 Say, for example, that you want to keep pinging a URL until it returns 200, or five seconds pass.
 And if the URL _does_ return 200, you'd like to know how long that took.
 
-This library contains a Future wrapper. It wraps up a Future you want to retry, and it keeps retrying
+This library contains a Future wrapper named `Restartable`. It wraps up a Future you want to retry, and it keeps retrying
 the future until it passes a Test you provide. If the inner future passes the Test, then the wrapper
 resolves your value. But if the inner future fails the Test, the wrapper will just restart the future.
 Assuming the timeout hasn't expired.

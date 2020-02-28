@@ -1,7 +1,7 @@
 //! Say, for example, that you want to keep pinging a URL until it returns 200, or five seconds pass.
 //! And if the URL _does_ return 200, you'd like to know how long that took.
 //!
-//! This library contains a Future wrapper. It wraps up a Future you want to retry, and it keeps retrying
+//! This library contains a Future wrapper named [`Restartable`](https://docs.rs/restartables/0.4.1/restartables/struct.Restartable.html). It wraps up a Future you want to retry, and it keeps retrying
 //! the future until it passes a Test you provide. If the inner future passes the Test, then the wrapper
 //! resolves your value. But if the inner future fails the Test, the wrapper will just restart the future.
 //! Assuming the timeout hasn't expired.
@@ -81,12 +81,16 @@ use std::time::{Duration, Instant};
 ///
 /// This is a Future adaptor, meaning it wraps other futures, like [`future::map`](https://docs.rs/futures/0.3.4/futures/future/trait.FutureExt.html#method.map)
 /// When this future is polled, it polls the inner future. If the inner futures resolves, its value
-/// is run through a `test` closure.
+/// is run through a `test` closure, which is of type `Fn(Future::Output) -> Result<T,E>`.
 ///
-/// If the test is successful, the value is returned with timing information.
-/// If the test is unsuccessful, the future is recreated and retried.
+/// If the test is successful, `Restartable` will resolve to a [`Success<T>`](https://docs.rs/restartables/0.4.1/restartables/struct.Success.html).
+///
+/// If the test is unsuccessful, the future is recreated and retried. Unless the timeout has expired,
+/// in which case `Restartable` will resolve to a [`Failure<E>`](https://docs.rs/restartables/0.4.1/restartables/enum.Failure.html)
+///
 /// Because this fail-restart loop could go on forever, you should supply a timeout. If a `None`
-/// timeout is used, then awaiting the `Restartable` is not guaranteed to resolve.
+/// timeout is used, then awaiting the `Restartable` might never finish (because of this fail-restart
+/// loop).
 #[pin_project]
 pub struct Restartable<Fut, Test, Factory, T, E>
 where
